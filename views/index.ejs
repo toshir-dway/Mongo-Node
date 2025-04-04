@@ -1,40 +1,306 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NeighborAlert - Carte</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    #map { 
-      height: 80vh; 
-      width: 100%; 
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    h1 {
+      margin: 0;
+    }
+    #map {
+      height: 60vh;
+      width: 100%;
+      margin-bottom: 20px;
+      border-radius: 8px;
+    }
+    .forms-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 768px) {
+      .forms-container {
+        grid-template-columns: 1fr;
+      }
+    }
+    .form-card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+    .form-card h2 {
+      margin-top: 0;
+      color: #333;
+      border-bottom: 2px solid #ddd;
+      padding-bottom: 10px;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+    input, select, button {
+      margin-bottom: 10px;
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+    button {
+      background-color: #7cc67f;
+      color: white;
+      border: none;
+      cursor: pointer;
+      padding: 10px;
+      font-weight: bold;
+    }
+    button:hover {
+      background-color: #628b64;
+    }
+    .coordinates-display {
+      font-size: 0.9em;
+      margin-bottom: 10px;
+      color: #666;
+    }
+    .alert-form button {
+      background-color: #ed938d;
+    }
+    .alert-form button:hover {
+      background-color: #9a5959;
+    }
+    .instructions {
+      background-color: #fffde7;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      border-left: 4px solid #ffc107;
     }
   </style>
 </head>
 <body>
-  <h1>🗺️ NeighborAlert</h1>
+  <header>
+    <h1>🗺️ NeighborAlert</h1>
+  </header>
+  
+  <div class="instructions">
+    <p><strong>Comment utiliser :</strong> Cliquez sur la carte pour placer un marqueur et remplir automatiquement les coordonnées dans les formulaires.</p>
+  </div>
+  
   <div id="map"></div>
   
+  <div class="coordinates-display" id="coordinates">
+    Position actuelle : Cliquez sur la carte pour définir les coordonnées
+  </div>
+  
+  <div class="forms-container">
+    <div class="form-card">
+      <h2>🏙️ Ajouter un lieu</h2>
+      <form id="placeForm">
+        <input name="name" placeholder="Nom du lieu" required>
+        <input name="description" placeholder="Description" required>
+        <input id="place-lat" name="lat" placeholder="Latitude" required>
+        <input id="place-lng" name="lng" placeholder="Longitude" required>
+        <select name="type">
+          <option value="adresse">Bonne adresse</option>
+          <option value="evenement">Événement communautaire</option>
+        </select>
+        <button type="submit">Ajouter ce lieu</button>
+      </form>
+    </div>
+    
+    <div class="form-card alert-form">
+      <h2>⚠️ Signaler une alerte</h2>
+      <form id="alertForm">
+        <input name="title" placeholder="Titre de l'alerte" required>
+        <input name="description" placeholder="Description" required>
+        <input id="alert-lat" name="lat" placeholder="Latitude" required>
+        <input id="alert-lng" name="lng" placeholder="Longitude" required>
+        <select name="type">
+          <option value="danger">Danger</option>
+          <option value="travaux">Travaux</option>
+          <option value="autre">Autre</option>
+        </select>
+        <button type="submit">Signaler cette alerte</button>
+      </form>
+    </div>
+  </div>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
+    // Initialize the map
     const map = L.map('map').setView([45.16, 5.71], 12); // Grenoble center
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
-    fetch('/api/places').then(res => res.json()).then(data => {
-      data.forEach(place => {
-        L.marker([place.coordinates.lat, place.coordinates.lng])
-          .addTo(map)
-          .bindPopup(`<b>${place.nom}</b><br>${place.description}`);
+    
+    // Variables to store current marker position
+    let currentMarker = null;
+    let currentLat = null;
+    let currentLng = null;
+    
+    // Reference to form fields
+    const placeLat = document.getElementById('place-lat');
+    const placeLng = document.getElementById('place-lng');
+    const alertLat = document.getElementById('alert-lat');
+    const alertLng = document.getElementById('alert-lng');
+    const coordDisplay = document.getElementById('coordinates');
+    
+    // Load existing places
+    fetch('/api/places')
+      .then(res => res.json())
+      .then(data => {
+        data.forEach(place => {
+          const lat = place.location ? place.location.coordinates[1] : place.lat;
+          const lng = place.location ? place.location.coordinates[0] : place.lng;
+          
+          L.marker([lat, lng])
+            .addTo(map)
+            .bindPopup(`<b>${place.name}</b><br>${place.description}`);
+        });
+      })
+      .catch(err => console.error('Erreur chargement places:', err));
+    
+    // Load existing alerts
+    fetch('/api/alerts')
+      .then(res => res.json())
+      .then(data => {
+        data.forEach(alert => {
+          const lat = alert.location ? alert.location.coordinates[1] : alert.lat;
+          const lng = alert.location ? alert.location.coordinates[0] : alert.lng;
+          const alertColor = alert.type === 'danger' ? 'red' : (alert.type === 'travaux' ? 'orange' : 'blue');
+          
+          L.circle([lat, lng], {
+            radius: 100,
+            color: alertColor,
+            fillColor: alertColor,
+            fillOpacity: 0.3
+          }).addTo(map)
+            .bindPopup(`<b>${alert.title}</b><br>${alert.description}`);
+        });
+      })
+      .catch(err => console.error('Erreur chargement alertes:', err));
+    
+    // Handle map clicks
+    map.on('click', function(e) {
+      // Get coordinates
+      currentLat = e.latlng.lat;
+      currentLng = e.latlng.lng;
+      
+      // Update form fields
+      placeLat.value = currentLat;
+      placeLng.value = currentLng;
+      alertLat.value = currentLat;
+      alertLng.value = currentLng;
+      
+      // Update coordinates display
+      coordDisplay.innerHTML = `Position sélectionnée : Latitude ${currentLat.toFixed(6)}, Longitude ${currentLng.toFixed(6)}`;
+      
+      // Remove existing temp marker if any
+      if (currentMarker) {
+        map.removeLayer(currentMarker);
+      }
+      
+      // Add new temp marker
+      currentMarker = L.marker([currentLat, currentLng]).addTo(map)
+        .bindPopup('Position sélectionnée')
+        .openPopup();
+    });
+    
+    // Form submission with fetch API
+    document.getElementById('placeForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const name = this.querySelector('[name="name"]').value;
+      const description = this.querySelector('[name="description"]').value;
+      const lat = parseFloat(this.querySelector('[name="lat"]').value);
+      const lng = parseFloat(this.querySelector('[name="lng"]').value);
+      const type = this.querySelector('[name="type"]').value;
+      
+      const data = {
+        name,
+        description,
+        location: {
+          type: "Point",
+          coordinates: [lng, lat] // GeoJSON format: [longitude, latitude]
+        },
+        type
+      };
+      
+      console.log('Envoi de données:', data);
+      
+      fetch('/api/places', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Erreur réseau');
+        }
+        return response.json();
+      })
+      .then(data => {
+        alert('Lieu ajouté avec succès!');
+        location.reload();
+      })
+      .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur lors de l\'ajout du lieu');
       });
     });
-
-    fetch('/api/alerts').then(res => res.json()).then(data => {
-      data.forEach(alert => {
-        L.circle([alert.coordinates.lat, alert.coordinates.lng], {
-          radius: 100,
-          color: 'red'
-        }).addTo(map)
-          .bindPopup(`<b>${alert.titre}</b><br>${alert.description}`);
+    
+    document.getElementById('alertForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const title = this.querySelector('[name="title"]').value;
+      const description = this.querySelector('[name="description"]').value;
+      const lat = parseFloat(this.querySelector('[name="lat"]').value);
+      const lng = parseFloat(this.querySelector('[name="lng"]').value);
+      const type = this.querySelector('[name="type"]').value;
+      
+      const data = {
+        title,
+        description,
+        location: {
+          type: "Point",
+          coordinates: [lng, lat] // GeoJSON format: [longitude, latitude]
+        },
+        type
+      };
+      
+      console.log('Envoi de données:', data);
+      
+      fetch('/api/alerts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Erreur réseau');
+        }
+        return response.json();
+      })
+      .then(data => {
+        alert('Alerte signalée avec succès!');
+        location.reload();
+      })
+      .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur lors du signalement de l\'alerte');
       });
     });
   </script>
