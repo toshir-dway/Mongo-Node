@@ -4,10 +4,12 @@ require('dotenv').config();
 const uri = process.env.MONGO_URI;
 const dbName = 'neighboralert';
 let alertsCollection;
+let mongoClient; // Store the MongoClient instance
 
 // Connexion unique à la collection Time Series "alerts"
 MongoClient.connect(uri)
   .then(client => {
+    mongoClient = client; // Store the client
     const db = client.db(dbName);
     alertsCollection = db.collection('alerts');
     console.log('✅ Connected to alerts Time Series collection');
@@ -15,6 +17,9 @@ MongoClient.connect(uri)
   .catch(err => {
     console.error('❌ Error connecting to MongoDB:', err);
   });
+
+exports.alertsCollection = () => alertsCollection; // Export as a getter function
+exports.mongoClient = () => mongoClient; // Export the MongoClient instance
 
 // GET /api/alerts — lire toutes les alertes
 exports.getAllAlerts = async (req, res) => {
@@ -48,19 +53,6 @@ exports.createAlert = async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 };
-
-// exports.updateAlert = async (req, res) => {
-//   try {
-//     const updatedAlert = await Alert.findByIdAndUpdate(req.params.id, req.body, { new: true });
-//     if (!updatedAlert) {
-//       return res.status(404).json({ error: 'Alert not found' });
-//     }
-//     res.json(updatedAlert);
-//   } catch (error) {
-//     console.error('Error updating alert:', error);
-//     res.status(500).json({ error: 'Server error' });
-//   }
-// };
 
 // DELETE /api/alerts/:id — supprimer une alerte
 exports.deleteAlert = async (req, res) => {

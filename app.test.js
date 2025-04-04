@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const alertsRouter = require('./routes/alerts');
 const placesRouter = require('./routes/places');
 const Place = require('./models/place');
+const { alertsCollection, mongoClient } = require('./controllers/alertsController'); // Import alertsCollection and mongoClient
 
 const app = express();
 app.use(express.json());
@@ -13,15 +14,17 @@ app.use('/api/places', placesRouter);
 
 const uri = process.env.MONGO_URI;
 const dbName = 'neighboralert';
-let alertsCollection;
-let mongoClient; // Explicitly store the MongoClient instance
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+});
 
 // Initialize MongoDB connection for tests
 beforeAll(async () => {
-  // Connect to MongoDB using MongoClient
-  mongoClient = await MongoClient.connect(uri); // Store the MongoClient instance
-  const db = mongoClient.db(dbName);
-  alertsCollection = db.collection('alerts');
   console.log('✅ Connected to alerts Time Series collection for tests');
 
   // Connect Mongoose for other models
@@ -31,10 +34,13 @@ beforeAll(async () => {
 afterAll(async () => {
   try {
     // Clean up the database
-    if (alertsCollection) {
-      await alertsCollection.deleteMany({});
+    if (alertsCollection()) { // Use the getter function
+      await alertsCollection().deleteMany({}); // Use the getter function
     }
     await Place.deleteMany({});
+
+    // Log Mongoose connection state
+    console.log('Mongoose connection state before closing:', mongoose.connection.readyState);
 
     // Close Mongoose connection
     if (mongoose.connection.readyState !== 0) {
@@ -42,9 +48,9 @@ afterAll(async () => {
       console.log('✅ Mongoose connection closed');
     }
 
-    // Close MongoClient connection
-    if (mongoClient) {
-      await mongoClient.close();
+    // Close MongoClient connection explicitly
+    if (mongoClient()) { // Use the getter function
+      await mongoClient().close(); // Use the getter function
       console.log('✅ MongoClient connection closed');
     }
   } catch (error) {
@@ -92,13 +98,13 @@ describe('API Endpoints', () => {
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days from now
     };
 
-    const insertedAlert = await alertsCollection.insertOne(newAlert);
+    const insertedAlert = await alertsCollection().insertOne(newAlert); // Use the getter function
 
     const res = await request(app).delete(`/api/alerts/${insertedAlert.insertedId}`);
     expect(res.statusCode).toBe(200);
     expect(res.body.message).toBe('Alert deleted successfully');
 
-    const deletedAlert = await alertsCollection.findOne({ _id: insertedAlert.insertedId });
+    const deletedAlert = await alertsCollection().findOne({ _id: insertedAlert.insertedId }); // Use the getter function
     expect(deletedAlert).toBeNull();
   });
 
