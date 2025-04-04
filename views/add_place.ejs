@@ -1,0 +1,12 @@
+<h2>Ajouter une bonne adresse / événement</h2>
+<form method="POST" action="/api/places">
+  <input name="nom" placeholder="Nom" required>
+  <input name="description" placeholder="Description" required>
+  <input name="coordinates[lat]" placeholder="Latitude" required>
+  <input name="coordinates[lng]" placeholder="Longitude" required>
+  <select name="type">
+    <option value="adresse">Bonne adresse</option>
+    <option value="evenement">Événement communautaire</option>
+  </select>
+  <button type="submit">Envoyer</button>
+</form>

@@ -6,6 +6,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
+app.set('view engine', 'ejs');
+app.use(express.static('public'));
 app.use(express.json());
 
 // MongoDB Connection
@@ -23,3 +25,16 @@ app.use('/api/places', placesRouter);
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+app.get('/', (req, res) => {
+  res.render('index');
+});
+
+app.get('/ajouter-place', (req, res) => {
+  res.render('add_place');
+});
+
+app.get('/ajouter-alerte', (req, res) => {
+  res.render('add_alert');
+});
+app.use(express.urlencoded({ extended: true })); // for form submissions
+

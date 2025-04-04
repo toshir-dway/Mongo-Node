@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>NeighborAlert - Carte</title>
+  <link rel="stylesheet" href="/leaflet/leaflet.css" />
+  <style>
+    #map { height: 80vh; width: 100%; }
+  </style>
+</head>
+<body>
+  <h1>🗺️ NeighborAlert</h1>
+  <div id="map"></div>
+  <script src="/leaflet/leaflet.js"></script>
+  <script>
+    const map = L.map('map').setView([48.85, 2.35], 13); // Paris center
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    fetch('/api/places').then(res => res.json()).then(data => {
+      data.forEach(place => {
+        L.marker([place.coordinates.lat, place.coordinates.lng])
+          .addTo(map)
+          .bindPopup(`<b>${place.nom}</b><br>${place.description}`);
+      });
+    });
+
+    fetch('/api/alerts').then(res => res.json()).then(data => {
+      data.forEach(alert => {
+        L.circle([alert.coordinates.lat, alert.coordinates.lng], {
+          radius: 100,
+          color: 'red'
+        }).addTo(map)
+          .bindPopup(`<b>${alert.titre}</b><br>${alert.description}`);
+      });
+    });
+  </script>
+</body>
+</html>
