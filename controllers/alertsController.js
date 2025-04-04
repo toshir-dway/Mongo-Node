@@ -49,27 +49,18 @@ exports.createAlert = async (req, res) => {
   }
 };
 
-// PUT /api/alerts/:id — mettre à jour une alerte
-exports.updateAlert = async (req, res) => {
-  try {
-    const id = req.params.id;
-
-    const updated = await alertsCollection.findOneAndUpdate(
-      { _id: new ObjectId(id) },
-      { $set: req.body },
-      { returnDocument: 'after' }
-    );
-
-    if (!updated.value) {
-      return res.status(404).json({ error: 'Alert not found' });
-    }
-
-    res.json(updated.value);
-  } catch (error) {
-    console.error('Error updating alert:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-};
+// exports.updateAlert = async (req, res) => {
+//   try {
+//     const updatedAlert = await Alert.findByIdAndUpdate(req.params.id, req.body, { new: true });
+//     if (!updatedAlert) {
+//       return res.status(404).json({ error: 'Alert not found' });
+//     }
+//     res.json(updatedAlert);
+//   } catch (error) {
+//     console.error('Error updating alert:', error);
+//     res.status(500).json({ error: 'Server error' });
+//   }
+// };
 
 // DELETE /api/alerts/:id — supprimer une alerte
 exports.deleteAlert = async (req, res) => {
