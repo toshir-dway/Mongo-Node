@@ -20,7 +20,7 @@ async function initTimeSeries() {
           metaField: 'type',
           granularity: 'seconds'
         },
-        expireAfterSeconds: 86400 // ⚠️ placé ici, pas dans createIndex
+        expireAfterSeconds: 86400 
       });
 
       console.log('✅ Collection "alerts" Time Series créée avec expiration automatique.');
