@@ -29,16 +29,26 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  // Clean up the database
-  await alertsCollection.deleteMany({});
-  await Place.deleteMany({});
+  try {
+    // Clean up the database
+    if (alertsCollection) {
+      await alertsCollection.deleteMany({});
+    }
+    await Place.deleteMany({});
 
-  // Close Mongoose connection
-  await mongoose.connection.close();
+    // Close Mongoose connection
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.connection.close();
+      console.log('✅ Mongoose connection closed');
+    }
 
-  // Close MongoClient connection
-  if (mongoClient) {
-    await mongoClient.close(); // Use the stored MongoClient instance to close the connection
+    // Close MongoClient connection
+    if (mongoClient) {
+      await mongoClient.close();
+      console.log('✅ MongoClient connection closed');
+    }
+  } catch (error) {
+    console.error('❌ Error during cleanup:', error);
   }
 });
 
