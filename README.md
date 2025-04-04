@@ -81,5 +81,5 @@ npm run init:db
 En production :
 
 ```bash
-    npm start
+npm start
 ```
