@@ -206,14 +206,18 @@
         data.forEach(place => {
           const lat = place.location ? place.location.coordinates[1] : place.lat;
           const lng = place.location ? place.location.coordinates[0] : place.lng;
-          
-          L.marker([lat, lng])
+
+          const marker = L.marker([lat, lng])
             .addTo(map)
-            .bindPopup(`<b>${place.name}</b><br>${place.description}`);
+            .bindPopup(`
+              <b>${place.name}</b><br>${place.description}<br>
+              <button onclick="deletePlace('${place._id}')">🗑️ Supprimer</button>
+              <button onclick="editPlace('${place._id}', '${place.name}', '${place.description}', ${lat}, ${lng}, '${place.type}')">✏️ Modifier</button>
+            `);
         });
       })
       .catch(err => console.error('Erreur chargement places:', err));
-    
+
     // Load existing alerts
     fetch('/api/alerts')
       .then(res => res.json())
@@ -222,25 +226,110 @@
           const lat = alert.location ? alert.location.coordinates[1] : alert.lat;
           const lng = alert.location ? alert.location.coordinates[0] : alert.lng;
           const alertColor = alert.type === 'danger' ? 'red' : (alert.type === 'travaux' ? 'orange' : 'blue');
-          
-          // Calculer les jours restants
-          let daysRemaining = "";
-          if (alert.expiresAt) {
-            const days = getRemainingDays(alert.expiresAt);
-            daysRemaining = `<br><span style="font-size: 0.9em; color: #666;">Expire dans ${days} jour${days > 1 ? 's' : ''}</span>`;
-          }
-          
-          L.circle([lat, lng], {
+
+          const circle = L.circle([lat, lng], {
             radius: 100,
             color: alertColor,
             fillColor: alertColor,
             fillOpacity: 0.3
           }).addTo(map)
-            .bindPopup(`<b>${alert.title}</b><br>${alert.description}${daysRemaining}`);
+            .bindPopup(`
+              <b>${alert.title}</b><br>${alert.description}<br>
+              <button onclick="deleteAlert('${alert._id}')">🗑️ Supprimer</button>
+              <button onclick="editAlert('${alert._id}', '${alert.title}', '${alert.description}', ${lat}, ${lng}, '${alert.type}')">✏️ Modifier</button>
+            `);
         });
       })
       .catch(err => console.error('Erreur chargement alertes:', err));
-    
+
+    // Delete a place
+    function deletePlace(id) {
+      if (confirm('Êtes-vous sûr de vouloir supprimer ce lieu ?')) {
+        fetch(`/api/places/${id}`, { method: 'DELETE' })
+          .then(res => {
+            if (!res.ok) throw new Error('Erreur lors de la suppression');
+            alert('Lieu supprimé avec succès');
+            location.reload();
+          })
+          .catch(err => alert('Erreur : ' + err));
+      }
+    }
+
+    // Delete an alert
+    function deleteAlert(id) {
+      if (confirm('Êtes-vous sûr de vouloir supprimer cette alerte ?')) {
+        fetch(`/api/alerts/${id}`, { method: 'DELETE' })
+          .then(res => {
+            if (!res.ok) throw new Error('Erreur lors de la suppression');
+            alert('Alerte supprimée avec succès');
+            location.reload();
+          })
+          .catch(err => alert('Erreur : ' + err));
+      }
+    }
+
+    // Edit a place
+    function editPlace(id, name, description, lat, lng, type) {
+      const newName = prompt('Modifier le nom du lieu', name);
+      const newDescription = prompt('Modifier la description', description);
+      const newLat = prompt('Modifier la latitude', lat);
+      const newLng = prompt('Modifier la longitude', lng);
+      const newType = prompt('Modifier le type (adresse/evenement)', type);
+
+      if (newName && newDescription && newLat && newLng && newType) {
+        fetch(`/api/places/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: newName,
+            description: newDescription,
+            location: {
+              type: 'Point',
+              coordinates: [parseFloat(newLng), parseFloat(newLat)]
+            },
+            type: newType
+          })
+        })
+          .then(res => {
+            if (!res.ok) throw new Error('Erreur lors de la modification');
+            alert('Lieu modifié avec succès');
+            location.reload();
+          })
+          .catch(err => alert('Erreur : ' + err));
+      }
+    }
+
+    // Edit an alert
+    function editAlert(id, title, description, lat, lng, type) {
+      const newTitle = prompt('Modifier le titre de l\'alerte', title);
+      const newDescription = prompt('Modifier la description', description);
+      const newLat = prompt('Modifier la latitude', lat);
+      const newLng = prompt('Modifier la longitude', lng);
+      const newType = prompt('Modifier le type (danger/travaux/autre)', type);
+
+      if (newTitle && newDescription && newLat && newLng && newType) {
+        fetch(`/api/alerts/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: newTitle,
+            description: newDescription,
+            location: {
+              type: 'Point',
+              coordinates: [parseFloat(newLng), parseFloat(newLat)]
+            },
+            type: newType
+          })
+        })
+          .then(res => {
+            if (!res.ok) throw new Error('Erreur lors de la modification');
+            alert('Alerte modifiée avec succès');
+            location.reload();
+          })
+          .catch(err => alert('Erreur : ' + err));
+      }
+    }
+
     // Handle map clicks
     map.on('click', function(e) {
       // Get coordinates

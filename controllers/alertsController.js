@@ -2,8 +2,7 @@ const Alert = require('../models/alert');
 
 exports.getAllAlerts = async (req, res) => {
   try {
-    // Ne récupère que les alertes non expirées
-    const alerts = await Alert.find({ expiresAt: { $gt: new Date() } });
+    const alerts = await Alert.find();
     res.json(alerts);
   } catch (error) {
     console.error('Error getting alerts:', error);
@@ -11,52 +10,39 @@ exports.getAllAlerts = async (req, res) => {
   }
 };
 
-exports.createAlert = async (req, res, next) => {
+exports.createAlert = async (req, res) => {
   try {
-    console.log('Received alert data:', req.body);
-
-    let alertData;
-
-    if (req.body.location) {
-      // Format complet (JSON API)
-      alertData = req.body;
-    } else {
-      // Format formulaire
-      const { title, description, lat, lng, type, duration } = req.body;
-
-      const durationDays = parseInt(duration) || 7;
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + durationDays);
-
-      alertData = {
-        title,
-        description,
-        location: {
-          type: 'Point',
-          coordinates: [parseFloat(lng), parseFloat(lat)]
-        },
-        type,
-        expiresAt
-      };
-    }
-
-    // Ajout du champ obligatoire pour Time Series
-    alertData.createdAt = new Date();
-
-    // Sécurité : fallback expiresAt si absent
-    if (!alertData.expiresAt) {
-      const fallback = new Date();
-      fallback.setDate(fallback.getDate() + 7);
-      alertData.expiresAt = fallback;
-    }
-
-    // Insertion directe dans la collection Time Series
-    const result = await Alert.collection.insertOne(alertData);
-
-    console.log('Alert saved:', alertData);
-    res.status(201).json(alertData);
+    const newAlert = new Alert(req.body);
+    const savedAlert = await newAlert.save();
+    res.status(201).json(savedAlert);
   } catch (error) {
     console.error('Error creating alert:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+exports.updateAlert = async (req, res) => {
+  try {
+    const updatedAlert = await Alert.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!updatedAlert) {
+      return res.status(404).json({ error: 'Alert not found' });
+    }
+    res.json(updatedAlert);
+  } catch (error) {
+    console.error('Error updating alert:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+exports.deleteAlert = async (req, res) => {
+  try {
+    const deletedAlert = await Alert.findByIdAndDelete(req.params.id);
+    if (!deletedAlert) {
+      return res.status(404).json({ error: 'Alert not found' });
+    }
+    res.json({ message: 'Alert deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting alert:', error);
     res.status(500).json({ error: 'Server error' });
   }
 };

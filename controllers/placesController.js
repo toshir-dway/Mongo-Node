@@ -12,35 +12,37 @@ exports.getAllPlaces = async (req, res) => {
 
 exports.createPlace = async (req, res) => {
   try {
-    console.log('Received place data:', req.body);
-    
-    // Handle both formats
-    let placeData;
-    
-    if (req.body.location) {
-      // Already in the correct format
-      placeData = req.body;
-    } else {
-      // Convert from form submission format
-      const { name, description, lat, lng, type } = req.body;
-      placeData = {
-        name,
-        description,
-        location: {
-          type: 'Point',
-          coordinates: [parseFloat(lng), parseFloat(lat)] // GeoJSON [longitude, latitude]
-        },
-        type
-      };
-    }
-    
-    const newPlace = new Place(placeData);
-    await newPlace.save();
-    
-    console.log('Place saved:', newPlace);
-    res.status(201).json(newPlace);
+    const newPlace = new Place(req.body);
+    const savedPlace = await newPlace.save();
+    res.status(201).json(savedPlace);
   } catch (error) {
     console.error('Error creating place:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+exports.updatePlace = async (req, res) => {
+  try {
+    const updatedPlace = await Place.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!updatedPlace) {
+      return res.status(404).json({ error: 'Place not found' });
+    }
+    res.json(updatedPlace);
+  } catch (error) {
+    console.error('Error updating place:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+exports.deletePlace = async (req, res) => {
+  try {
+    const deletedPlace = await Place.findByIdAndDelete(req.params.id);
+    if (!deletedPlace) {
+      return res.status(404).json({ error: 'Place not found' });
+    }
+    res.json({ message: 'Place deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting place:', error);
     res.status(500).json({ error: 'Server error' });
   }
 };
