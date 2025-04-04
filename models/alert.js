@@ -33,10 +33,17 @@ const alertSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
+  },
+  expiresAt: {
+    type: Date,
+    required: true
   }
 });
 
-// Pour les coordonnées simples (temporaire, pour compatibilité)
+// Index TTL (Time-To-Live) pour la suppression automatique
+alertSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+
+// Pour les coordonnées simples (pour compatibilité)
 alertSchema.virtual('lat').get(function() {
   return this.location.coordinates[1];
 });

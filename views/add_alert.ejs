@@ -57,11 +57,24 @@
     .back-link:hover {
       text-decoration: underline;
     }
+    .expiration-info {
+      background-color: #e8f4fd;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      font-size: 0.9em;
+      border-left: 4px solid #2196F3;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Signaler une alerte</h1>
+    
+    <div class="expiration-info">
+      <p><strong>Note :</strong> Les alertes sont temporaires et seront automatiquement supprimées après la période spécifiée.</p>
+    </div>
+    
     <form action="/api/alerts" method="POST">
       <label for="title">Titre de l'alerte</label>
       <input type="text" id="title" name="title" required>
@@ -80,6 +93,15 @@
         <option value="danger">Danger</option>
         <option value="travaux">Travaux</option>
         <option value="autre">Autre</option>
+      </select>
+      
+      <label for="duration">Durée de l'alerte</label>
+      <select id="duration" name="duration">
+        <option value="1">1 jour</option>
+        <option value="3">3 jours</option>
+        <option value="7" selected>1 semaine</option>
+        <option value="14">2 semaines</option>
+        <option value="30">1 mois</option>
       </select>
       
       <button type="submit">Signaler cette alerte</button>
