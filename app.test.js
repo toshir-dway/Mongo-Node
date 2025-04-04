@@ -28,10 +28,18 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  // Clean up the database and disconnect
+  // Clean up the database
   await alertsCollection.deleteMany({});
   await Place.deleteMany({});
+
+  // Close Mongoose connection
   await mongoose.connection.close();
+
+  // Close MongoClient connection
+  if (alertsCollection) {
+    const client = alertsCollection.s.db.s.client;
+    await client.close();
+  }
 });
 
 describe('API Endpoints', () => {
