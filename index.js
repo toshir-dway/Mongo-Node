@@ -6,18 +6,18 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(express.json()); // To parse JSON bodies
+app.use(express.json());
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => console.log('✅ Connected to MongoDB'))
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('✅ Connected to MongoDB'))
   .catch((err) => console.error('❌ MongoDB connection error:', err));
 
 // Routes
-const usersRouter = require('./routes/users');
-app.use('/api/users', usersRouter);
+const alertsRouter = require('./routes/alerts');
+const placesRouter = require('./routes/places');
+app.use('/api/alerts', alertsRouter);
+app.use('/api/places', placesRouter);
 
 // Start server
 app.listen(PORT, () => {
