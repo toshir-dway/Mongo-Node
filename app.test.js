@@ -14,12 +14,13 @@ app.use('/api/places', placesRouter);
 const uri = process.env.MONGO_URI;
 const dbName = 'neighboralert';
 let alertsCollection;
+let mongoClient; // Explicitly store the MongoClient instance
 
 // Initialize MongoDB connection for tests
 beforeAll(async () => {
   // Connect to MongoDB using MongoClient
-  const client = await MongoClient.connect(uri);
-  const db = client.db(dbName);
+  mongoClient = await MongoClient.connect(uri); // Store the MongoClient instance
+  const db = mongoClient.db(dbName);
   alertsCollection = db.collection('alerts');
   console.log('✅ Connected to alerts Time Series collection for tests');
 
@@ -36,9 +37,8 @@ afterAll(async () => {
   await mongoose.connection.close();
 
   // Close MongoClient connection
-  if (alertsCollection) {
-    const client = alertsCollection.s.db.s.client;
-    await client.close();
+  if (mongoClient) {
+    await mongoClient.close(); // Use the stored MongoClient instance to close the connection
   }
 });
 
