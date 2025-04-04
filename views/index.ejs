@@ -236,7 +236,6 @@
             .bindPopup(`
               <b>${alert.title}</b><br>${alert.description}<br>
               <button onclick="deleteAlert('${alert._id}')">🗑️ Supprimer</button>
-              <button onclick="editAlert('${alert._id}', '${alert.title}', '${alert.description}', ${lat}, ${lng}, '${alert.type}')">✏️ Modifier</button>
             `);
         });
       })
@@ -299,36 +298,36 @@
       }
     }
 
-    // Edit an alert
-    function editAlert(id, title, description, lat, lng, type) {
-      const newTitle = prompt('Modifier le titre de l\'alerte', title);
-      const newDescription = prompt('Modifier la description', description);
-      const newLat = prompt('Modifier la latitude', lat);
-      const newLng = prompt('Modifier la longitude', lng);
-      const newType = prompt('Modifier le type (danger/travaux/autre)', type);
+    // // Edit an alert
+    // function editAlert(id, title, description, lat, lng, type) {
+    //   const newTitle = prompt('Modifier le titre de l\'alerte', title);
+    //   const newDescription = prompt('Modifier la description', description);
+    //   const newLat = prompt('Modifier la latitude', lat);
+    //   const newLng = prompt('Modifier la longitude', lng);
+    //   const newType = prompt('Modifier le type (danger/travaux/autre)', type);
 
-      if (newTitle && newDescription && newLat && newLng && newType) {
-        fetch(`/api/alerts/${id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title: newTitle,
-            description: newDescription,
-            location: {
-              type: 'Point',
-              coordinates: [parseFloat(newLng), parseFloat(newLat)]
-            },
-            type: newType
-          })
-        })
-          .then(res => {
-            if (!res.ok) throw new Error('Erreur lors de la modification');
-            alert('Alerte modifiée avec succès');
-            location.reload();
-          })
-          .catch(err => alert('Erreur : ' + err));
-      }
-    }
+    //   if (newTitle && newDescription && newLat && newLng && newType) {
+    //     fetch(`/api/alerts/${id}`, {
+    //       method: 'PUT',
+    //       headers: { 'Content-Type': 'application/json' },
+    //       body: JSON.stringify({
+    //         title: newTitle,
+    //         description: newDescription,
+    //         location: {
+    //           type: 'Point',
+    //           coordinates: [parseFloat(newLng), parseFloat(newLat)]
+    //         },
+    //         type: newType
+    //       })
+    //     })
+    //       .then(res => {
+    //         if (!res.ok) throw new Error('Erreur lors de la modification');
+    //         alert('Alerte modifiée avec succès');
+    //         location.reload();
+    //       })
+    //       .catch(err => alert('Erreur : ' + err));
+    //   }
+    // }
 
     // Handle map clicks
     map.on('click', function(e) {

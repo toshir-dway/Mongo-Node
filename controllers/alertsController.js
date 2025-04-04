@@ -21,18 +21,18 @@ exports.createAlert = async (req, res) => {
   }
 };
 
-exports.updateAlert = async (req, res) => {
-  try {
-    const updatedAlert = await Alert.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!updatedAlert) {
-      return res.status(404).json({ error: 'Alert not found' });
-    }
-    res.json(updatedAlert);
-  } catch (error) {
-    console.error('Error updating alert:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-};
+// exports.updateAlert = async (req, res) => {
+//   try {
+//     const updatedAlert = await Alert.findByIdAndUpdate(req.params.id, req.body, { new: true });
+//     if (!updatedAlert) {
+//       return res.status(404).json({ error: 'Alert not found' });
+//     }
+//     res.json(updatedAlert);
+//   } catch (error) {
+//     console.error('Error updating alert:', error);
+//     res.status(500).json({ error: 'Server error' });
+//   }
+// };
 
 exports.deleteAlert = async (req, res) => {
   try {
