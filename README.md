@@ -4,13 +4,11 @@
 
 Créer une application communautaire permettant de partager des informations, alertes ou bonnes adresses avec :
 
-- 📦 MongoDB (avec collection Time Series)
-- 🧭 Carte interactive (Leaflet ou Mapbox)
+- 📦 MongoDB avec collection Time Series
+- 🧭 Carte interactive Leaflet
 - ⚙️ API REST en Node.js / Express (MVC)
-- 🧪 Tests (Jest + Supertest)
-- 🔐 Sécurité de base (connexion, rôles, SSL possible)
 - 🐳 Docker (MongoDB local en conteneur)
-- 🔄 CI/CD (à intégrer)
+- 🔄 CI/CD 
 - 📁 Projet bien structuré, documenté et esthétique
 
 ---
